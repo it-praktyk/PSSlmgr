@@ -1,3 +1,4 @@
+Set-StrictMode -Version Latest
 Function Get-LicenseStatus {
 
     [Cmdletbinding()]
@@ -38,20 +39,39 @@ Function Get-LicenseStatus {
 
     $LicenseData = Get-CimInstance -Query $QueryString
 
+    $LicenseData
+
+    #This retrieve strings hard-coded in the slmgr.vbs tool
+    $Messages = Import-MessageString
+
     $object | Add-Member -MemberType NoteProperty -Name Name -Value $LicenseData.Name
 
     $object | Add-Member -MemberType NoteProperty -Name Description -Value $LicenseData.Description
 
-    $ResolvedLicenseStatus = Resolve-LicenseStatus -LicenseStatus $LicenseData.LicenseStatus -LicenseStatusReason $LicenseData.LicenseStatusReason
+    $ResolvedLicenseStatus = Resolve-LicenseStatus -Messages $Messages -LicenseStatus $LicenseData.LicenseStatus -LicenseStatusReason $LicenseData.LicenseStatusReason
 
     $object | Add-Member -MemberType NoteProperty -Name LicenseStatus -Value $ResolvedLicenseStatus.LicenseStatus
 
     $object | Add-Member -MemberType NoteProperty -Name LicenseStatusReason -Value $ResolvedLicenseStatus.LicenseStatusReason
 
+    $ResolvedLicenseType = Resolve-LicenseType -Description $LicenseData.Description
+
+    $object | Add-Member -MemberType NoteProperty -Name LicenseType -Value $ResolvedLicenseType.LicenseType
+
+    $object | Add-Member -MemberType NoteProperty -Name LicenseTypeDescription -Value $ResolvedLicenseType.LicenseTypeDescription
+
+    $object | Add-Member -MemberType NoteProperty -Name GraceRemainingTimeMinutes -Value $LicenseData.GracePeriodRemaining
+
+    $GracePeriodRemainingDays = $(Convert-MinutesToDay -Minutes $LicenseData.GracePeriodRemaining)
+
+    $object | Add-Member -MemberType NoteProperty -Name GraceRemainingTimeDays -Value $GracePeriodRemainingDays
+
+    $ResolvedGraceRemainingTime = Resolve-GracePeriodRemaining -Messages $Messages -GracePeriodRemainingMinutes $LicenseData.GracePeriodRemaining -GracePeriodRemainingDays $GracePeriodRemainingDays -LicenseType $ResolvedLicenseType.LicenseType
+
+    $object | Add-Member -MemberType NoteProperty -Name GraceRemainingTimeDescription -Value $ResolvedGraceRemainingTime.GracePeriodRemainingDescripton
+
     $object | Add-Member -MemberType NoteProperty -Name PartialProductKey -Value $LicenseData.PartialProductKey
 
-
     $object
-
 
 }

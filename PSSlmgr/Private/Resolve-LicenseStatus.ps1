@@ -1,3 +1,4 @@
+Set-StrictMode -Version Latest
 Function Resolve-LicenseStatus {
 
     #Strings are available also in the file
@@ -6,19 +7,17 @@ Function Resolve-LicenseStatus {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]
+        [psobject]$Messages,
+        [Parameter(Mandatory=$true)]
         [Int]$LicenseStatus,
         [Parameter(Mandatory=$false)]
         [AllowNull()]
-        [Long]$LicenseStatusReason,
-        [Parameter(Mandatory=$false)]
-        [AllowNull()]
-        [Int]$GracePeriodRemaining
+        [Long]$LicenseStatusReason        
     )
 
     $object = New-Object -TypeName psobject
 
-    #This retrieve strings hard-coded in the slmgr.vbs tool
-    $Messages = Import-MessageString
+    $VariableFor5 = $null
 
     if ( $null -ne $LicenseStatusReason ) {
 
@@ -36,11 +35,6 @@ Function Resolve-LicenseStatus {
                 $VariableFor5 = $($Messages.L_MsgNotificationErrorReasonOther).Replace('%ERRCODE%',"0x$ErrorHex")
             }
         }
-
-    }
-
-    if ( $null -ne $GracePeriodRemaining ) {
-
 
     }
 
@@ -63,7 +57,6 @@ Function Resolve-LicenseStatus {
         5 = $VariableFor5
         6 = $null
     }
-
 
     if ( $LicenseStatus -ge 0 -and $LicenseStatus -le 6 ) {
 

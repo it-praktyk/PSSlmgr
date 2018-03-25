@@ -1,9 +1,10 @@
+Set-StrictMode -Version Latest
 Function Split-MessageText {
 
     [Cmdletbinding()]
     Param (
-        [Parameter(Mandatory=$true)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory=$false)]
+        [AllowNull()]
         [String]$MessageText,
         [Parameter(Mandatory=$false)]
         [String]$Separator=':',
@@ -15,25 +16,36 @@ Function Split-MessageText {
 
     $Object = New-Object -TypeName psobject
 
-    $Parts = $MessageText.Split($Separator,[System.StringSplitOptions]::RemoveEmptyEntries)
+    if ( [String]::IsNullOrEmpty($MessageText) ) {
 
-    $PartsCount = $( $Parts | Measure-Object).Count
-
-    $Caption = $($Parts[0]).Trim()
-
-    if ( $PartsCount -gt 1 -and $PartsCount -gt $SplitAt ) {
-        $Value = $($Parts[$SplitAt]).Trim()
-
-        if ( $RemoveTheEndingDot.IsPresent -and $Value.ToCharArray()[-1] -eq '.' ) {
-
-            $Value = $Value.Substring(0,$Value.Length -1)
-
-        }
+        $Caption = $null
+        $Value = $null
 
     }
     else {
 
-        $Value = $null
+        $Parts = $MessageText.Split($Separator,[System.StringSplitOptions]::RemoveEmptyEntries)
+
+        $PartsCount = $( $Parts | Measure-Object).Count
+
+        $Caption = $($Parts[0]).Trim()
+
+        if ( $PartsCount -gt 1 -and $PartsCount -gt $SplitAt ) {
+
+            $Value = $($Parts[$SplitAt]).Trim()
+
+            if ( $RemoveTheEndingDot.IsPresent -and $Value.ToCharArray()[-1] -eq '.' ) {
+
+                $Value = $Value.Substring(0,$Value.Length -1)
+
+            }
+
+        }
+        else {
+
+            $Value = $null
+
+        }
 
     }
 
