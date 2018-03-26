@@ -12,65 +12,96 @@ Function Get-LicenseStatus {
         [System.Management.Automation.Credential()]
         $Credential = [System.Management.Automation.PSCredential]::Empty,
         [Parameter(Mandatory=$false)]
-        [Switch]$Detailed,
+        [Switch]$Details,
         [Parameter(Mandatory=$false)]
         [Switch]$AnsibleMode
     )
 
     $object = New-Object -TypeName psobject
 
-    if ( $Detailed.IsPresent) {
+    if ( $Details.IsPresent) {
 
-        [String]$LicenseFields = "Name,Description,GracePeriodRemaining,PartialProductKey,LicenseStatus,LicenseStatusReason"
+        [String]$LicenseProductFields = "Name,Description,GracePeriodRemaining,PartialProductKey,LicenseStatus,LicenseStatusReason,ProductKeyID,ProductKeyChannel,OfflineInstallationId,ProcessorURL,LicenseStatus,LicenseStatusReason,EvaluationEndDate,VLRenewalInterval,VLActivationInterval,KeyManagementServiceLookupDomain,KeyManagementServiceMachine,KeyManagementServicePort,DiscoveredKeyManagementServiceMachineName,DiscoveredKeyManagementServiceMachinePort,DiscoveredKeyManagementServiceMachineIpAddress,KeyManagementServiceProductKeyID,TokenActivationILID,TokenActivationILVID,TokenActivationGrantNumber,TokenActivationCertificateThumbprint,TokenActivationAdditionalInfo,TrustedTime,ADActivationObjectName,ADActivationObjectDN,ADActivationCsvlkPid,ADActivationCsvlkSkuId,VLActivationTypeEnabled,VLActivationType,IAID,AutomaticVMActivationHostMachineName,AutomaticVMActivationLastActivationTime,AutomaticVMActivationHostDigitalPid2,RemainingAppReArmCount,RemainingSkuReArmCount"
 
-        #SLS = Software licensing service version
-        $SLSVersion = $(Get-CimInstance -Query 'select Version from SoftwareLicensingService').Version
+        [String]$LicenseServiceFields = "KeyManagementServiceListeningPort,KeyManagementServiceDnsPublishing,KeyManagementServiceLowPriority,ClientMachineId,KeyManagementServiceHostCaching,Version,RemainingWindowsReArmCount"
+
+        [String]$ServiceQueryString = "select $LicenseServiceFields from SoftwareLicensingService"
+
+        $LicenseServiceData = Get-CimInstance -Query $ServiceQueryString
+
+        #$LicenseServiceData
 
     }
     else {
 
-        [String]$LicenseFields = "Name,Description,PartialProductKey,LicenseStatus,LicenseStatusReason,GracePeriodRemaining"
+        [String]$LicenseProductFields = "Name,Description,PartialProductKey,LicenseStatus,LicenseStatusReason,GracePeriodRemaining"
 
     }
 
     #55c92734-d682-4d71-983e-d6ec3f16059f is Windows internal ApplicationId
 
-    [String]$QueryString = "select $LicenseFields from SoftwareLicensingProduct where ApplicationId = `"55c92734-d682-4d71-983e-d6ec3f16059f`" and PartialProductKey IS NOT NULL"
+    [String]$ProductQueryString = "select $LicenseProductFields from SoftwareLicensingProduct where ApplicationId = `"55c92734-d682-4d71-983e-d6ec3f16059f`" and PartialProductKey IS NOT NULL"
 
-    $LicenseData = Get-CimInstance -Query $QueryString
+    $LicenseProductData = Get-CimInstance -Query $ProductQueryString
 
-    $LicenseData
+    #$LicenseProductData
 
     #This retrieve strings hard-coded in the slmgr.vbs tool
     $Messages = Import-MessageString
 
-    $object | Add-Member -MemberType NoteProperty -Name Name -Value $LicenseData.Name
+    #Below you have to add all calculated fields
 
-    $object | Add-Member -MemberType NoteProperty -Name Description -Value $LicenseData.Description
-
-    $ResolvedLicenseStatus = Resolve-LicenseStatus -Messages $Messages -LicenseStatus $LicenseData.LicenseStatus -LicenseStatusReason $LicenseData.LicenseStatusReason
+    $ResolvedLicenseStatus = Resolve-LicenseStatus -Messages $Messages -LicenseStatus $LicenseProductData.LicenseStatus -LicenseStatusReason $LicenseProductData.LicenseStatusReason
 
     $object | Add-Member -MemberType NoteProperty -Name LicenseStatus -Value $ResolvedLicenseStatus.LicenseStatus
 
     $object | Add-Member -MemberType NoteProperty -Name LicenseStatusReason -Value $ResolvedLicenseStatus.LicenseStatusReason
 
-    $ResolvedLicenseType = Resolve-LicenseType -Description $LicenseData.Description
-
     $object | Add-Member -MemberType NoteProperty -Name LicenseType -Value $ResolvedLicenseType.LicenseType
 
     $object | Add-Member -MemberType NoteProperty -Name LicenseTypeDescription -Value $ResolvedLicenseType.LicenseTypeDescription
 
-    $object | Add-Member -MemberType NoteProperty -Name GraceRemainingTimeMinutes -Value $LicenseData.GracePeriodRemaining
-
-    $GracePeriodRemainingDays = $(Convert-MinutesToDay -Minutes $LicenseData.GracePeriodRemaining)
+    $GracePeriodRemainingDays = $(Convert-MinutesToDay -Minutes $LicenseProductData.GracePeriodRemaining)
 
     $object | Add-Member -MemberType NoteProperty -Name GraceRemainingTimeDays -Value $GracePeriodRemainingDays
 
-    $ResolvedGraceRemainingTime = Resolve-GracePeriodRemaining -Messages $Messages -GracePeriodRemainingMinutes $LicenseData.GracePeriodRemaining -GracePeriodRemainingDays $GracePeriodRemainingDays -LicenseType $ResolvedLicenseType.LicenseType
+    $ResolvedGracePeriodRemainingTime = Resolve-GracePeriodRemaining -Messages $Messages -GracePeriodRemainingMinutes $LicenseProductData.GracePeriodRemaining -GracePeriodRemainingDays $GracePeriodRemainingDays -LicenseType $ResolvedLicenseType.LicenseType
 
-    $object | Add-Member -MemberType NoteProperty -Name GraceRemainingTimeDescription -Value $ResolvedGraceRemainingTime.GracePeriodRemainingDescripton
+    $object | Add-Member -MemberType NoteProperty -Name GraceRemainingTimeDescription -Value $ResolvedGracePeriodRemainingTime.GracePeriodRemainingDescripton
 
-    $object | Add-Member -MemberType NoteProperty -Name PartialProductKey -Value $LicenseData.PartialProductKey
+    $ExistingProperties = $(Get-Member -InputObject $object -MemberType NoteProperty).Name
+
+    #The rest of fields for a license product will be added by the loop
+
+    [String[]]$LicenseProductFieldsArray = $LicenseProductFields -Split ','
+
+    ForEach ( $Property in $LicenseProductFieldsArray ) {
+
+        if ($ExistingProperties -notcontains $Property ) {
+
+            $object | Add-Member -MemberType NoteProperty -Name $Property -Value $LicenseProductData.$Property
+
+        }
+
+    }
+
+
+    #All license service (not products) data are added below
+    if ( $Details.IsPresent ) {
+
+        [String[]]$LicenseServiceFieldsArray = $LicenseServiceFields -Split ','
+
+        ForEach ( $Property in $LicenseServiceFieldsArray ) {
+
+            if ($ExistingProperties -notcontains $Property ) {
+
+                $object | Add-Member -MemberType NoteProperty -Name $Property -Value $LicenseServiceData.$Property
+
+            }
+
+        }
+
+    }
 
     $object
 

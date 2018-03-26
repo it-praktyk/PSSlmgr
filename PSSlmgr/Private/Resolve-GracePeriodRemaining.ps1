@@ -38,6 +38,11 @@ Function Resolve-GracePeriodRemaining {
         $object | Add-Member -MemberType NoteProperty -Name GracePeriodRemainingDescripton -Value $GracePeriodRemainingDescripton.Replace('%MINUTE%',$GracePeriodRemainingMinutes).Replace('%DAY%',$GracePeriodRemainingDays)
 
     }
+    else {
+
+        $object | Add-Member -MemberType NoteProperty -Name GracePeriodRemainingDescripton -Value $null
+
+    }
 
     $object
 
