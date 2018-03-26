@@ -9,7 +9,7 @@ Function Convert-MinutesToDay {
     Param (
         [Parameter(Mandatory=$true)]
         [AllowNull()]
-        [Long]$Minutes
+        [Decimal]$Minutes
     )
 
     if ( $Minutes -gt 0 ) {
