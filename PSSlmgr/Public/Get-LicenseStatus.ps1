@@ -29,8 +29,6 @@ Function Get-LicenseStatus {
 
         $LicenseServiceData = Get-CimInstance -Query $ServiceQueryString
 
-        #$LicenseServiceData
-
     }
     else {
 
@@ -42,7 +40,19 @@ Function Get-LicenseStatus {
 
     [String]$ProductQueryString = "select $LicenseProductFields from SoftwareLicensingProduct where ApplicationId = `"55c92734-d682-4d71-983e-d6ec3f16059f`" and PartialProductKey IS NOT NULL"
 
-    $LicenseProductData = Get-CimInstance -Query $ProductQueryString
+    $LicenseProductData = $(Get-CimSoftwareLicensingProduct -Query $ProductQueryString)
+
+    #if ( ($? -ne 0) -and -not $([String]::IsNullOrEmpty($LicenseProductErrorGlobal)) ) {
+    
+        if ( ($? -ne 0) -and ( $null -ne $LicenseProductErrorGlobal) ) {
+
+        [String]$ExceptionMessage = $($LicenseProductErrorGlobal.Exception | Select-Object -First 1)
+
+        Remove-Variable -Name LicenseProductErrorGlobal -Scope Global -ErrorAction SilentlyContinue
+
+        Throw $ExceptionMessage
+
+    }
 
     #$LicenseProductData
 
@@ -56,6 +66,8 @@ Function Get-LicenseStatus {
     $object | Add-Member -MemberType NoteProperty -Name LicenseStatus -Value $ResolvedLicenseStatus.LicenseStatus
 
     $object | Add-Member -MemberType NoteProperty -Name LicenseStatusReason -Value $ResolvedLicenseStatus.LicenseStatusReason
+
+    $ResolvedLicenseType = Resolve-LicenseType -Description $LicenseProductData.Description
 
     $object | Add-Member -MemberType NoteProperty -Name LicenseType -Value $ResolvedLicenseType.LicenseType
 
