@@ -4,8 +4,10 @@ Function Get-LicenseStatus {
     [Cmdletbinding()]
     Param (
         [Parameter(Mandatory=$false)]
+        [String]$ApplicationID,
+        [Parameter(Mandatory=$false)]
         [Alias('MachineName')]
-        $ComputerName="localhost",
+        [String]$ComputerName="localhost",
         [Parameter(Mandatory=$false)]
         [ValidateNotNull()]
         [System.Management.Automation.PSCredential]
@@ -16,6 +18,13 @@ Function Get-LicenseStatus {
         [Parameter(Mandatory=$false)]
         [Switch]$AnsibleMode
     )
+
+    if ( [String]::IsNullOrEmpty($ApplicationID) ) {
+
+        #55c92734-d682-4d71-983e-d6ec3f16059f is Windows internal ApplicationId
+        $ApplicationIDInternal = '55c92734-d682-4d71-983e-d6ec3f16059f'
+
+    }
 
     $object = New-Object -TypeName psobject
 
@@ -36,25 +45,31 @@ Function Get-LicenseStatus {
 
     }
 
-    #55c92734-d682-4d71-983e-d6ec3f16059f is Windows internal ApplicationId
-
-    [String]$ProductQueryString = "select $LicenseProductFields from SoftwareLicensingProduct where ApplicationId = `"55c92734-d682-4d71-983e-d6ec3f16059f`" and PartialProductKey IS NOT NULL"
+    [String]$ProductQueryString = "select $LicenseProductFields from SoftwareLicensingProduct where ApplicationId = `"$ApplicationIDInternal`" and PartialProductKey IS NOT NULL"
 
     $LicenseProductData = $(Get-CimSoftwareLicensingProduct -Query $ProductQueryString)
 
-    #if ( ($? -ne 0) -and -not $([String]::IsNullOrEmpty($LicenseProductErrorGlobal)) ) {
-    
-        if ( ($? -ne 0) -and ( $null -ne $LicenseProductErrorGlobal) ) {
+    Try {
 
-        [String]$ExceptionMessage = $($LicenseProductErrorGlobal.Exception | Select-Object -First 1)
+        $LicenseProductErrorGlobalInternal = $LicenseProductErrorGlobal
+
+    }
+    Catch {
+
+        $LicenseProductErrorGlobalInternal = $null
+
+    }
+    
+
+    if ( ($? -ne 0) -and ( $null -ne $LicenseProductErrorGlobalInternal) ) {
+
+        [String]$ExceptionMessage = $($LicenseProductErrorGlobalInternal.Exception | Select-Object -First 1)
 
         Remove-Variable -Name LicenseProductErrorGlobal -Scope Global -ErrorAction SilentlyContinue
 
         Throw $ExceptionMessage
 
     }
-
-    #$LicenseProductData
 
     #This retrieve strings hard-coded in the slmgr.vbs tool
     $Messages = Import-MessageString
@@ -73,7 +88,16 @@ Function Get-LicenseStatus {
 
     $object | Add-Member -MemberType NoteProperty -Name LicenseTypeDescription -Value $ResolvedLicenseType.LicenseTypeDescription
 
-    $GracePeriodRemainingDays = $(Convert-MinutesToDay -Minutes $LicenseProductData.GracePeriodRemaining)
+    if ( $LicenseProductData.GracePeriodRemaining -eq 0 ) {
+
+        GracePeriodRemainingDays = 0
+
+    }
+    else {
+
+        $GracePeriodRemainingDays = $(Convert-MinutesToDay -Minutes $LicenseProductData.GracePeriodRemaining)
+
+    }
 
     $object | Add-Member -MemberType NoteProperty -Name GraceRemainingTimeDays -Value $GracePeriodRemainingDays
 

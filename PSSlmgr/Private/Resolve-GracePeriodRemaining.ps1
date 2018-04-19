@@ -24,7 +24,7 @@ Function Resolve-GracePeriodRemaining {
         Switch ( $LicenseType ) {
 
             'TBL' {
-                $GracePeriodRemainingDescripton = $($Messages.L_MsgLicenseStatusTBL_1)
+                $GracePeriodRemainingDescripton = $Messages.L_MsgLicenseStatusTBL_1
             }
             'AVMA' {
                 $GracePeriodRemainingDescripton = $Messages.L_MsgLicenseStatusAVMA_1

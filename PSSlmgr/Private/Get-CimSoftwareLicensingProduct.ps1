@@ -1,6 +1,6 @@
 Function Get-CimSoftwareLicensingProduct {
 
-     [Cmdletbinding()]
+    [Cmdletbinding()]
     Param (
         [Parameter(Mandatory=$true)]
         [String]$Query,
@@ -24,7 +24,7 @@ Function Get-CimSoftwareLicensingProduct {
 
     if ( -Not [String]::IsNullOrEmpty($LicenseProductError)) {
 
-        New-Variable -Name LicenseProductErrorGlobal -Value $LicenseProductError -Scope Global 
+        New-Variable -Name LicenseProductErrorGlobal -Value $LicenseProductError -Scope Global
 
     }
     else {
