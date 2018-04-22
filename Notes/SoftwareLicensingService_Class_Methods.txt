@@ -1,0 +1,30 @@
+PS C:\Users\vagrant> Get-CimClass  -Namespace root/CIMV2 | where { $_.cimclassname -match "SoftwareLicensingService"} | select -ExpandProperty Cimclassmethods
+
+Name                                                ReturnType Parameters                                         Qualifiers
+----                                                ---------- ----------                                         ----------
+InstallProductKey                                       UInt32 {ProductKey}                                       {Implemented}
+InstallLicense                                          UInt32 {License}                                          {implemented}
+InstallLicensePackage                                   UInt32 {LicensePackage}                                   {implemented}
+SetKeyManagementServiceMachine                          UInt32 {MachineName}                                      {implemented}
+ClearKeyManagementServiceMachine                        UInt32 {}                                                 {implemented}
+SetKeyManagementServicePort                             UInt32 {PortNumber}                                       {implemented}
+ClearKeyManagementServicePort                           UInt32 {}                                                 {implemented}
+SetKeyManagementServiceLookupDomain                     UInt32 {LookupDomain}                                     {implemented}
+ClearKeyManagementServiceLookupDomain                   UInt32 {}                                                 {implemented}
+SetVLActivationInterval                                 UInt32 {ActivationInterval}                               {implemented}
+SetVLRenewalInterval                                    UInt32 {RenewalInterval}                                  {implemented}
+ClearProductKeyFromRegistry                             UInt32 {}                                                 {implemented}
+AcquireGenuineTicket                                    UInt32 {ServerUrl, TemplateId}                            {implemented}
+ReArmWindows                                            UInt32 {}                                                 {implemented}
+ReArmApp                                                UInt32 {ApplicationId}                                    {implemented}
+RefreshLicenseStatus                                    UInt32 {}                                                 {implemented}
+SetKeyManagementServiceListeningPort                    UInt32 {PortNumber}                                       {implemented}
+ClearKeyManagementServiceListeningPort                  UInt32 {}                                                 {implemented}
+DisableKeyManagementServiceDnsPublishing                UInt32 {DisablePublishing}                                {implemented}
+EnableKeyManagementServiceLowPriority                   UInt32 {EnableLowPriority}                                {implemented}
+DisableKeyManagementServiceHostCaching                  UInt32 {DisableCaching}                                   {implemented}
+GenerateActiveDirectoryOfflineActivationId              UInt32 {ProductKey, InstallationID}                       {implemented}
+DepositActiveDirectoryOfflineActivationConfirmation     UInt32 {ActivationObjectName, ConfirmationID, ProductKey} {implemented}
+DoActiveDirectoryOnlineActivation                       UInt32 {ActivationObjectName, ProductKey}                 {implemented}
+SetVLActivationTypeEnabled                              UInt32 {ActivationType}                                   {implemented}
+ClearVLActivationTypeEnabled                            UInt32 {}                                                 {implemented}

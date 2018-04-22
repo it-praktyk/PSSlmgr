@@ -1,0 +1,21 @@
+Get-CimClass  -Namespace root/CIMV2 | where { $_.cimclassname -match "SoftwareLicensingProduct"} | select -ExpandProperty Cimclassmethods
+
+Name                                  ReturnType Parameters                       Qualifiers
+----                                  ---------- ----------                       ----------
+UninstallProductKey                       UInt32 {}                               {Implemented}
+Activate                                  UInt32 {}                               {implemented}
+DepositOfflineConfirmationId              UInt32 {ConfirmationId, InstallationId} {implemented}
+GetPolicyInformationDWord                 UInt32 {PolicyName, PolicyValue}        {implemented}
+GetPolicyInformationString                UInt32 {PolicyName, PolicyValue}        {implemented}
+SetKeyManagementServiceMachine            UInt32 {MachineName}                    {implemented}
+ClearKeyManagementServiceMachine          UInt32 {}                               {implemented}
+SetKeyManagementServicePort               UInt32 {PortNumber}                     {implemented}
+ClearKeyManagementServicePort             UInt32 {}                               {implemented}
+SetKeyManagementServiceLookupDomain       UInt32 {LookupDomain}                   {implemented}
+ClearKeyManagementServiceLookupDomain     UInt32 {}                               {implemented}
+GetTokenActivationGrants                  UInt32 {Grants}                         {implemented}
+GenerateTokenActivationChallenge          UInt32 {Challenge}                      {implemented}
+DepositTokenActivationResponse            UInt32 {CertChain, Challenge, Response} {implemented}
+SetVLActivationTypeEnabled                UInt32 {ActivationType}                 {implemented}
+ClearVLActivationTypeEnabled              UInt32 {}                               {implemented}
+ReArmSku                                  UInt32 {}                               {implemented}
