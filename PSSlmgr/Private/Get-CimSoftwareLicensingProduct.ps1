@@ -20,7 +20,7 @@ Function Get-CimSoftwareLicensingProduct {
 
     Remove-Variable -Name LicenseProductErrorGlobal -Force -Scope Global -ErrorAction SilentlyContinue
 
-    $LicenseProductData = Get-CimInstance -Query $ProductQueryString -ErrorVariable LicenseProductError 2>&1 | out-null
+    $LicenseProductData = Get-CimInstance -Query $ProductQueryString -ErrorVariable LicenseProductError #2>&1 | out-null
 
     if ( -Not [String]::IsNullOrEmpty($LicenseProductError)) {
 
